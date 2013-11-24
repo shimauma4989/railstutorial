@@ -38,6 +38,7 @@ config/initializers/secret_token.rb
 # Ignore other unneeded files.
 doc/
 *.swp
+\#*#
 *~
 .project
 .DS_Store
