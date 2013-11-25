@@ -18,15 +18,43 @@ describe "Static pages" do
 
     describe "for signed-in users" do
       let(:user) { FactoryGirl.create(:user) }
-      before do
-        FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
-        FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
-        sign_in user
-        visit root_path
+      let(:another_user) { FactoryGirl.create(:user) }
+      describe "ther user's feed" do
+        before do
+          @user_micropost = FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+          FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+          @another_user_micropost = FactoryGirl.create(:micropost, user: another_user, content: "Open sesame!")
+          sign_in user
+          visit root_path
+        end
+        it "should render all feeds" do
+          user.feed.each do |item|
+            expect(page).to have_selector("li##{item.id}", text: item.content)
+          end
+        end
+        it { should have_link("delete", href: micropost_path(@user_micropost)) }
+        it { should_not have_link("delete", href: micropost_path(@another_user_micropost)) }
       end
-      it "should render the user's feed" do
-        user.feed.each do |item|
-          expect(page).to have_selector("li##{item.id}", text: item.content)
+      describe "the sidebar micropost counts" do
+        describe "one post" do
+          before do 
+            FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+            sign_in user
+            visit root_path
+          end
+          
+          it { should have_content(/1 micropost[^s]/) }
+        end
+        
+        describe "multiple posts" do
+          before do 
+            FactoryGirl.create(:micropost, user: user, content: "Lorem ipsum")
+            FactoryGirl.create(:micropost, user: user, content: "Dolor sit amet")
+            sign_in user
+            visit root_path
+          end
+          
+          it { should have_content("2 microposts") }
         end
       end
     end
